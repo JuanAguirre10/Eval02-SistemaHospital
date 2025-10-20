@@ -1,0 +1,268 @@
+CREATE DATABASE hospital_db;
+USE hospital_db;
+
+CREATE TABLE Paciente (
+    idPaciente INT PRIMARY KEY AUTO_INCREMENT,
+    dni VARCHAR(20) NOT NULL UNIQUE,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    fechaNacimiento DATE,
+    sexo CHAR(1),
+    direccion VARCHAR(200),
+    telefono VARCHAR(20),
+    correo VARCHAR(100),
+    estado VARCHAR(20) DEFAULT 'activo'
+);
+
+CREATE TABLE HistoriaClinica (
+    idHistoria INT PRIMARY KEY AUTO_INCREMENT,
+    idPaciente INT NOT NULL,
+    fechaApertura DATE NOT NULL,
+    observaciones TEXT,
+    FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente)
+);
+
+CREATE TABLE AntecedenteMedico (
+    idAntecedente INT PRIMARY KEY AUTO_INCREMENT,
+    idHistoria INT NOT NULL,
+    tipo VARCHAR(100),
+    descripcion TEXT,
+    FOREIGN KEY (idHistoria) REFERENCES HistoriaClinica(idHistoria)
+);
+
+CREATE TABLE Medico (
+    idMedico INT PRIMARY KEY AUTO_INCREMENT,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    colegiatura VARCHAR(50) NOT NULL,
+    telefono VARCHAR(20),
+    correo VARCHAR(100),
+    estado VARCHAR(20) DEFAULT 'activo'
+);
+
+CREATE TABLE Especialidad (
+    idEspecialidad INT PRIMARY KEY AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT
+);
+
+CREATE TABLE MedicoEspecialidad (
+    idMedicoEsp INT PRIMARY KEY AUTO_INCREMENT,
+    idMedico INT NOT NULL,
+    idEspecialidad INT NOT NULL,
+    FOREIGN KEY (idMedico) REFERENCES Medico(idMedico),
+    FOREIGN KEY (idEspecialidad) REFERENCES Especialidad(idEspecialidad)
+);
+
+CREATE TABLE Cita (
+    idCita INT PRIMARY KEY AUTO_INCREMENT,
+    idPaciente INT NOT NULL,
+    idMedico INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    motivo TEXT,
+    estado VARCHAR(20) DEFAULT 'programada',
+    FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente),
+    FOREIGN KEY (idMedico) REFERENCES Medico(idMedico)
+);
+
+CREATE TABLE Consulta (
+    idConsulta INT PRIMARY KEY AUTO_INCREMENT,
+    idCita INT NOT NULL,
+    idMedico INT NOT NULL,
+    idPaciente INT NOT NULL,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    motivoConsulta TEXT,
+    observaciones TEXT,
+    FOREIGN KEY (idCita) REFERENCES Cita(idCita),
+    FOREIGN KEY (idMedico) REFERENCES Medico(idMedico),
+    FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente)
+);
+
+CREATE TABLE Diagnostico (
+    idDiagnostico INT PRIMARY KEY AUTO_INCREMENT,
+    idConsulta INT NOT NULL,
+    descripcion TEXT,
+    tipo VARCHAR(50),
+    FOREIGN KEY (idConsulta) REFERENCES Consulta(idConsulta)
+);
+
+CREATE TABLE RecetaMedica (
+    idReceta INT PRIMARY KEY AUTO_INCREMENT,
+    idConsulta INT NOT NULL,
+    indicaciones TEXT,
+    FOREIGN KEY (idConsulta) REFERENCES Consulta(idConsulta)
+);
+
+CREATE TABLE DetalleReceta (
+    idDetalleReceta INT PRIMARY KEY AUTO_INCREMENT,
+    idReceta INT NOT NULL,
+    medicamento VARCHAR(200),
+    dosis VARCHAR(100),
+    frecuencia VARCHAR(100),
+    duracion VARCHAR(100),
+    FOREIGN KEY (idReceta) REFERENCES RecetaMedica(idReceta)
+);
+
+CREATE TABLE Habitacion (
+    idHabitacion INT PRIMARY KEY AUTO_INCREMENT,
+    numero VARCHAR(20) NOT NULL,
+    tipo VARCHAR(50),
+    estado VARCHAR(20) DEFAULT 'disponible'
+);
+
+CREATE TABLE Hospitalizacion (
+    idHosp INT PRIMARY KEY AUTO_INCREMENT,
+    idPaciente INT NOT NULL,
+    idHabitacion INT NOT NULL,
+    fechaIngreso DATE NOT NULL,
+    fechaAlta DATE,
+    diagnosticoIngreso TEXT,
+    estado VARCHAR(20) DEFAULT 'activo',
+    FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente),
+    FOREIGN KEY (idHabitacion) REFERENCES Habitacion(idHabitacion)
+);
+
+CREATE TABLE Factura (
+    idFactura INT PRIMARY KEY AUTO_INCREMENT,
+    idPaciente INT NOT NULL,
+    fechaEmision DATE NOT NULL,
+    total DECIMAL(10,2),
+    estado VARCHAR(20) DEFAULT 'pendiente',
+    FOREIGN KEY (idPaciente) REFERENCES Paciente(idPaciente)
+);
+
+CREATE TABLE DetalleFactura (
+    idDetalleFactura INT PRIMARY KEY AUTO_INCREMENT,
+    idFactura INT NOT NULL,
+    concepto VARCHAR(200),
+    monto DECIMAL(10,2),
+    FOREIGN KEY (idFactura) REFERENCES Factura(idFactura)
+);
+
+CREATE TABLE Usuario (
+    idUsuario INT PRIMARY KEY AUTO_INCREMENT,
+    nombreUsuario VARCHAR(50) NOT NULL UNIQUE,
+    contrasena VARCHAR(255) NOT NULL,
+    rol VARCHAR(50)
+);
+
+CREATE TABLE Bitacora (
+    idBitacora INT PRIMARY KEY AUTO_INCREMENT,
+    idUsuario INT NOT NULL,
+    accion TEXT,
+    fechaHora DATETIME NOT NULL,
+    FOREIGN KEY (idUsuario) REFERENCES Usuario(idUsuario)
+);
+
+INSERT INTO Paciente (dni, nombres, apellidos, fechaNacimiento, sexo, direccion, telefono, correo, estado) VALUES
+('12345678', 'Juan Carlos', 'Pérez García', '1990-05-15', 'M', 'Av. Principal 123', '987654321', 'juan.perez@email.com', 'activo'),
+('23456789', 'María Elena', 'González López', '1985-08-22', 'F', 'Jr. Los Olivos 456', '987654322', 'maria.gonzalez@email.com', 'activo'),
+('34567890', 'Pedro Antonio', 'Ramírez Torres', '1978-12-10', 'M', 'Av. Los Pinos 789', '987654323', 'pedro.ramirez@email.com', 'activo'),
+('45678901', 'Ana Lucía', 'Fernández Ruiz', '1995-03-25', 'F', 'Calle Las Flores 321', '987654324', 'ana.fernandez@email.com', 'activo'),
+('56789012', 'Carlos Eduardo', 'Mendoza Silva', '1988-07-18', 'M', 'Av. Central 654', '987654325', 'carlos.mendoza@email.com', 'activo');
+
+INSERT INTO HistoriaClinica (idPaciente, fechaApertura, observaciones) VALUES
+(1, '2024-01-15', 'Paciente con historial de hipertensión controlada'),
+(2, '2024-02-20', 'Paciente sin antecedentes relevantes'),
+(3, '2024-03-10', 'Paciente diabético tipo 2'),
+(4, '2024-04-05', 'Paciente con antecedentes de asma'),
+(5, '2024-05-12', 'Paciente sin patologías previas');
+
+INSERT INTO AntecedenteMedico (idHistoria, tipo, descripcion) VALUES
+(1, 'Enfermedades previas', 'Hipertensión arterial diagnosticada en 2020'),
+(1, 'Alergias', 'Alergia a la penicilina'),
+(2, 'Cirugías', 'Apendicectomía en 2015'),
+(3, 'Enfermedades previas', 'Diabetes tipo 2 desde 2018'),
+(4, 'Enfermedades previas', 'Asma bronquial desde la infancia');
+
+INSERT INTO Especialidad (nombre, descripcion) VALUES
+('Cardiología', 'Especialidad médica dedicada al estudio del corazón'),
+('Pediatría', 'Especialidad médica dedicada a la salud de niños y adolescentes'),
+('Traumatología', 'Especialidad médica dedicada al sistema músculo-esquelético'),
+('Neurología', 'Especialidad médica dedicada al sistema nervioso'),
+('Dermatología', 'Especialidad médica dedicada a la piel');
+
+INSERT INTO Medico (nombres, apellidos, colegiatura, telefono, correo, estado) VALUES
+('Roberto', 'Sánchez Vega', 'CMP-12345', '999111222', 'roberto.sanchez@hospital.com', 'activo'),
+('Patricia', 'López Martínez', 'CMP-23456', '999222333', 'patricia.lopez@hospital.com', 'activo'),
+('Fernando', 'Castro Díaz', 'CMP-34567', '999333444', 'fernando.castro@hospital.com', 'activo'),
+('Claudia', 'Morales Ríos', 'CMP-45678', '999444555', 'claudia.morales@hospital.com', 'activo'),
+('Miguel', 'Vargas Cruz', 'CMP-56789', '999555666', 'miguel.vargas@hospital.com', 'activo');
+
+INSERT INTO MedicoEspecialidad (idMedico, idEspecialidad) VALUES
+(1, 1),
+(2, 2),
+(3, 3),
+(4, 4),
+(5, 5);
+
+INSERT INTO Cita (idPaciente, idMedico, fecha, hora, motivo, estado) VALUES
+(1, 1, '2025-01-20', '09:00:00', 'Control de hipertensión', 'atendida'),
+(2, 2, '2025-01-21', '10:00:00', 'Control pediátrico', 'atendida'),
+(3, 3, '2025-01-22', '11:00:00', 'Dolor en rodilla', 'atendida'),
+(4, 4, '2025-01-23', '14:00:00', 'Cefalea recurrente', 'programada'),
+(5, 5, '2025-01-24', '15:00:00', 'Lesión en la piel', 'programada');
+
+INSERT INTO Consulta (idCita, idMedico, idPaciente, fecha, hora, motivoConsulta, observaciones) VALUES
+(1, 1, 1, '2025-01-20', '09:00:00', 'Control de hipertensión', 'Presión arterial estable'),
+(2, 2, 2, '2025-01-21', '10:00:00', 'Control pediátrico', 'Desarrollo normal del menor'),
+(3, 3, 3, '2025-01-22', '11:00:00', 'Dolor en rodilla', 'Posible desgaste de cartílago');
+
+INSERT INTO Diagnostico (idConsulta, descripcion, tipo) VALUES
+(1, 'Hipertensión arterial controlada', 'definitivo'),
+(2, 'Desarrollo psicomotor adecuado', 'definitivo'),
+(3, 'Condromalacia rotuliana grado II', 'presuntivo');
+
+INSERT INTO RecetaMedica (idConsulta, indicaciones) VALUES
+(1, 'Tomar medicamentos con las comidas, evitar alimentos salados'),
+(2, 'Suplemento vitamínico una vez al día'),
+(3, 'Aplicar gel antiinflamatorio y realizar fisioterapia');
+
+INSERT INTO DetalleReceta (idReceta, medicamento, dosis, frecuencia, duracion) VALUES
+(1, 'Enalapril', '10mg', 'Cada 12 horas', '30 días'),
+(1, 'Aspirina', '100mg', 'Una vez al día', '30 días'),
+(2, 'Multivitamínico infantil', '5ml', 'Una vez al día', '90 días'),
+(3, 'Diclofenaco gel', 'Aplicación tópica', 'Cada 8 horas', '15 días'),
+(3, 'Ibuprofeno', '400mg', 'Cada 8 horas', '7 días');
+
+INSERT INTO Habitacion (numero, tipo, estado) VALUES
+('101', 'general', 'disponible'),
+('201', 'UCI', 'disponible'),
+('102', 'general', 'ocupada'),
+('301', 'emergencia', 'disponible'),
+('202', 'UCI', 'mantenimiento');
+
+INSERT INTO Hospitalizacion (idPaciente, idHabitacion, fechaIngreso, fechaAlta, diagnosticoIngreso, estado) VALUES
+(1, 3, '2025-01-15', NULL, 'Crisis hipertensiva', 'activo'),
+(3, 3, '2024-12-10', '2024-12-20', 'Fractura de tibia', 'dado de alta'),
+(2, 3, '2024-11-05', '2024-11-10', 'Neumonía', 'dado de alta'),
+(4, 3, '2024-10-15', '2024-10-18', 'Migraña severa', 'dado de alta'),
+(5, 3, '2024-09-20', '2024-09-22', 'Reacción alérgica', 'dado de alta');
+
+INSERT INTO Factura (idPaciente, fechaEmision, total, estado) VALUES
+(1, '2025-01-20', 150.00, 'pagado'),
+(2, '2025-01-21', 100.00, 'pagado'),
+(3, '2025-01-22', 200.00, 'pendiente'),
+(4, '2025-01-23', 180.00, 'pendiente'),
+(5, '2025-01-24', 120.00, 'pagado');
+
+INSERT INTO DetalleFactura (idFactura, concepto, monto) VALUES
+(1, 'Consulta cardiológica', 80.00),
+(1, 'Medicamentos', 70.00),
+(2, 'Consulta pediátrica', 60.00),
+(2, 'Vacunas', 40.00),
+(3, 'Consulta traumatológica', 80.00),
+(3, 'Radiografía', 120.00),
+(4, 'Consulta neurológica', 100.00),
+(4, 'Resonancia magnética', 80.00),
+(5, 'Consulta dermatológica', 70.00),
+(5, 'Biopsia', 50.00);
+
+INSERT INTO Usuario (nombreUsuario, contrasena, rol) VALUES
+('juan', '1234', 'admin'),
+('roberto', 'medico123', 'medico'),
+('patricia', 'medico123', 'medico'),
+('recepcion', 'recep123', 'recepcionista'),
+('enfermera1', 'enf123', 'enfermera');
